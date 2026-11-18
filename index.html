@@ -250,7 +250,7 @@ const FLOOR_MATS={
 };
 const WALL_COLORS=['#eceae4','#f6f4ef','#d9d4ca','#c8cfd4','#a9b8a6','#8fa3b5','#d8b8a0','#4a4f55'];
 const KELVIN=[[2700,'#ffa75a'],[3000,'#ffb46b'],[4000,'#ffd2a1'],[5000,'#ffe6cc'],[6500,'#fff6f0']];
-const LIGHT_TYPES={ceiling:{name:'Ceiling',lm:800},pendant:{name:'Pendant',lm:600},lamp:{name:'Floor lamp',lm:450},spot:{name:'Recessed spot',lm:500}};
+const LIGHT_TYPES={ceiling:{name:'Ceiling',lm:800},pendant:{name:'Pendant',lm:600},lamp:{name:'Floor lamp',lm:450},tablelamp:{name:'Table lamp',lm:450},spot:{name:'Recessed spot',lm:500},can6:{name:'Recessed 6"',lm:900}};
 const DOOR_STYLES={hinged:'Hinged',double:'Double',sliding:'Sliding / barn',open:'Cased opening'};
 // name, category, w, d, h (inches), color, builder
 const PRESETS={
@@ -277,6 +277,10 @@ const PRESETS={
  tub:['Bathtub','Bath',60,30,20,'#f6f6f4'],
  shower:['Shower','Bath',36,36,80,'#f6f6f4'],
  washer:['Washer / dryer','Utility',27,30,38,'#f2f2f2'],
+ flattv:['Flat-screen TV (wall)','Living',57,2,33,'#111214','flattv',42],
+ benchrack:['Bench press rack','Gym',50,64,90,'#b3261e'],
+ treadmill:['Treadmill','Gym',34,80,58,'#2a2d31'],
+ spinbike:['Peloton-style bike','Gym',24,59,53,'#c8102e'],
  stairs:['Stairs','Structure',36,120,108,'#9c7a58'],
  box:['Plain box','Structure',24,24,24,'#a3a8ae'],
 };
@@ -568,6 +572,22 @@ function buildItem(it){
  case 'tub':{const wm=M('#f6f6f4',{r:.25});bx(g,w,h,d,0,0,0,wm);bx(g,w-.14,.004,d-.14,0,h,0,M('#d7e3ea',{r:.15}),false);break}
  case 'shower':{const wm=M('#f6f6f4',{r:.25});bx(g,w,.08,d,0,0,0,wm);const gm=M('#cfe7f5',{op:.16,r:.05});bx(g,w,h-.08,.01,0,.08,d/2,gm,false);bx(g,.01,h-.08,d,w/2,.08,0,gm,false);cyl(g,.08,.08,.02,0,h-.3,-d/2+.15,M('#bbb',{m:.9}));break}
  case 'washer':{bx(g,w,h,d,0,0,0,M(c,{r:.4}));const dm=new THREE.Mesh(new THREE.CylinderGeometry(w*.3,w*.3,.02,28),M('#2b3640',{r:.15,m:.3}));dm.rotation.x=Math.PI/2;dm.position.set(0,h*.45,d/2+.01);g.add(dm);bx(g,w,.1,.01,0,h-.12,d/2,M('#ddd'),false);break}
+ case 'flattv':{bx(g,w,h,d,0,0,0,M('#0b0c0f',{r:.25,m:.4}));bx(g,w-.03,h-.03,.004,0,.015,d/2,M('#05070b',{r:.08,m:.2,e:'#1d3150',ei:.55}),false);bx(g,w*.4,h*.4,.04,0,h*.3,-d/2-.02,M('#333',{m:.6,r:.4}));break}
+ case 'benchrack':{const st=M('#1d1e20',{m:.55,r:.45}),rd=Math.min(d,48*IN),z0=-d/2,post=.064;
+  for(const sx of[-1,1])for(const zz of[z0+post/2,z0+rd-post/2])bx(g,post,h,post,sx*(w/2-post/2),0,zz,st);
+  for(const zz of[z0+post/2,z0+rd-post/2])bx(g,w,post,post,0,h-post,zz,st);for(const sx of[-1,1]){bx(g,post,post,rd,sx*(w/2-post/2),h-post,z0+rd/2,st);bx(g,post,post,rd,sx*(w/2-post/2),.02,z0+rd/2,st)}
+  for(const sx of[-1,1]){bx(g,.05,.05,.12,sx*(w/2-post/2),1.12,z0+rd-post-.06,M(c,{m:.3,r:.5}));bx(g,.04,.04,rd-.1,sx*(w/2-post*1.6),.55,z0+rd/2,M('#888',{m:.8,r:.3}))}
+  const bar=new THREE.Mesh(new THREE.CylinderGeometry(.014,.014,2.2,12),M('#b9bcc0',{m:.9,r:.25}));bar.rotation.z=Math.PI/2;bar.position.set(0,1.17,z0+rd-post-.06);bar.castShadow=true;g.add(bar);
+  for(const sx of[-1,1])for(const k of[0,1]){const pl=new THREE.Mesh(new THREE.CylinderGeometry(.225,.225,.05,32),M('#151515',{r:.7}));pl.rotation.z=Math.PI/2;pl.position.set(sx*(.86+k*.055),1.17,z0+rd-post-.06);pl.castShadow=true;g.add(pl)}
+  const bl=1.2,bz=z0+rd*.42+bl/2-.2;bx(g,.3,.06,bl,0,.38,bz,M(c,{r:.6}));for(const zz of[bz-bl/2+.12,bz+bl/2-.12])bx(g,.06,.38,.06,0,0,zz,st);bx(g,.45,.04,.06,0,0,bz-bl/2+.12,st);bx(g,.45,.04,.06,0,0,bz+bl/2-.12,st);break}
+ case 'treadmill':{const dk=M('#2a2d31',{r:.5,m:.3});bx(g,w*.9,.2,d,0,0,0,dk);bx(g,w*.6,.012,d*.82,0,.2,.04*d,M('#101113',{r:.9}));
+  for(const sx of[-1,1]){bx(g,.05,h-.12,.07,sx*w*.42,.1,-d/2+.16,dk);bx(g,.04,.04,d*.32,sx*w*.42,h*.66,-d/2+.16+d*.16,M('#888',{m:.8,r:.3}))}
+  const con=bx(g,w,.1,.32,0,h-.12,-d/2+.12,dk);bx(g,w*.55,.18,.02,0,h-.1,-d/2+.06,M('#05070b',{r:.1,e:'#1d3150',ei:.5}),false);bx(g,w*.9,.03,.06,0,h*.12,-d/2+.03,M(c,{r:.5}));void con;break}
+ case 'spinbike':{const fr=M('#1c1c1e',{m:.5,r:.4});for(const zz of[-d/2+.05,d/2-.05])bx(g,w,.05,.08,0,0,zz,fr);bx(g,.07,.07,d*.8,0,.04,0,fr);
+  const fw=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.07,40),M(c,{m:.4,r:.35}));fw.rotation.z=Math.PI/2;fw.position.set(0,.36,-d*.2);fw.castShadow=true;g.add(fw);
+  const sp=bx(g,.06,h*.72,.06,0,.05,d*.16,fr);sp.rotation.x=-.25;bx(g,.17,.06,.28,0,h*.74,d*.24,M('#222',{r:.8}));
+  const hp=bx(g,.06,h*.78,.06,0,.05,-d*.22,fr);hp.rotation.x=.18;bx(g,.46,.035,.14,0,h*.8,-d*.33,M('#2b2b2b',{r:.6}));
+  const scr=bx(g,.52,.32,.03,0,h-.16,-d*.38,M('#05070b',{r:.1,e:'#1d3150',ei:.55}));scr.rotation.x=-.3;break}
  case 'stairs':{const n=Math.max(3,Math.round(h/.18)),rise=h/n,run=d/n;for(let i=0;i<n;i++)bx(g,w,(i+1)*rise,run,0,0,d/2-run*(i+.5),mc);
   const rail=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,Math.hypot(d,h)),wood);rail.position.set(w/2-.03,h/2+.9,0);rail.rotation.x=Math.atan2(h,d);rail.castShadow=true;g.add(rail);break}
  case 'photo':{const L=S.library.find(l=>l.id===it.lib);if(!L){bx(g,w,h,d,0,0,0,mc);break}const tex=libTex(L);
@@ -586,7 +606,13 @@ function buildItem(it){
 function buildLight(L,fh,cast){
  const g=new THREE.Group(),col=new THREE.Color(L.color),cd=L.on?L.lm/(4*Math.PI)*.4:0;
  const bulb=M(L.color,{e:L.color,ei:L.on?2.2:0,r:.3});let light,y;
- if(L.type==='spot'){y=fh-.03;light=new THREE.SpotLight(col,cd*1.6,0,Math.PI/4.5,.55,2);light.position.set(0,y-.02,0);light.target.position.set(0,0,0);g.add(light.target);
+ if(L.type==='can6'){y=fh-.02;light=new THREE.SpotLight(col,cd*1.5,0,Math.PI/3.2,.75,2);light.position.set(0,y-.03,0);light.target.position.set(0,0,0);g.add(light.target);
+  const d=cyl(g,.065,.065,.01,0,y-.005,0,bulb);d.castShadow=false;const r=cyl(g,.0835,.0835,.008,0,y+.005,0,M('#f2f2f0',{r:.4}));r.castShadow=false}
+ else if(L.type==='tablelamp'){const lb=L.lift??.66;y=lb+.36;light=new THREE.PointLight(col,cd,0,2);light.position.y=y;
+  const base=cyl(g,.07,.08,.03,0,lb,0,M('#3a3633',{r:.4,m:.3}));const stem=cyl(g,.012,.012,.3,0,lb+.03,0,M('#b8a27a',{m:.8,r:.3}));
+  const sh=new THREE.Mesh(new THREE.CylinderGeometry(.1,.16,.22,28,1,true),M('#f3ead9',{e:L.color,ei:L.on?.7:0,ds:true,r:.9}));sh.position.y=y+.02;g.add(sh);
+  const b=new THREE.Mesh(new THREE.SphereGeometry(.035,12,8),bulb);b.position.y=y;g.add(b);[base,stem].forEach(m=>m.castShadow=true)}
+ else if(L.type==='spot'){y=fh-.03;light=new THREE.SpotLight(col,cd*1.6,0,Math.PI/4.5,.55,2);light.position.set(0,y-.02,0);light.target.position.set(0,0,0);g.add(light.target);
   const d=cyl(g,.06,.06,.012,0,y,0,bulb);d.castShadow=false;const r=cyl(g,.08,.08,.006,0,y+.012,0,M('#ddd'));r.castShadow=false}
  else if(L.type==='lamp'){y=1.42;light=new THREE.PointLight(col,cd,0,2);light.position.y=y;
   const base=cyl(g,.14,.16,.03,0,0,0,M('#2a2a2a',{m:.5,r:.4}));const pole=cyl(g,.012,.012,1.45,0,.03,0,M('#2a2a2a',{m:.6,r:.4}));
@@ -636,7 +662,7 @@ function buildDraft3D(){
    m.position.set(w.x1+I.ux*d.off,elev(w.floor)+y0+d.h/2,w.z1+I.uz*d.off);m.rotation.y=-I.a;draftG.add(m)}}
   else if(d.kind==='item'){const key=JSON.stringify(d.spec);if(key!==ghostKey){if(ghostItem){draftG.remove(ghostItem);disposeTree(ghostItem)}ghostItem=buildItem(d.spec);ghostKey=key;draftG.add(ghostItem)}
    ghostItem.position.set(d.x,elev(S.cur)+(d.spec.y||0),d.z);ghostItem.rotation.y=d.spec.rot||0}
-  else if(d.kind==='light'){const m=new THREE.Mesh(new THREE.SphereGeometry(.12,16,10),accSolid);m.position.set(d.x,elev(S.cur)+(d.type==='lamp'?1.42:floorH(S.cur)-.2),d.z);draftG.add(m);dot(d.x,d.z)}
+  else if(d.kind==='light'){const m=new THREE.Mesh(new THREE.SphereGeometry(.12,16,10),accSolid);m.position.set(d.x,elev(S.cur)+(d.type==='lamp'?1.42:d.type==='tablelamp'?1.02:floorH(S.cur)-.2),d.z);draftG.add(m);dot(d.x,d.z)}
  }
  const ms=ui.measure;if(ms&&ms.a){dot(ms.a.x,ms.a.z);if(ms.b){seg(ms.a.x,ms.a.z,ms.b.x,ms.b.z,.025,.025);dot(ms.b.x,ms.b.z)}}
 }
@@ -769,6 +795,9 @@ function drawItem2D(g,it,C,sel){
  else if(kind==='stove'){for(const sx of[-1,1])for(const sz of[-1,1]){g.moveTo(sx*w*.24+w*.1,sz*d*.22);g.arc(sx*w*.24,sz*d*.22,w*.1,0,7)}}
  else if(kind==='toilet'||kind==='plant'){g.ellipse(0,kind==='toilet'?d*.12:0,w*.4,kind==='toilet'?d*.3:d*.4,0,0,7)}
  else if(kind==='tub'||kind==='vanity'){g.roundRect(-w/2+5,-d/2+5,w-10,d-10,6)}
+ else if(kind==='treadmill'){g.rect(-w*.3,-d*.4,w*.6,d*.82);g.moveTo(-w/2,-d/2+d*.16);g.lineTo(w/2,-d/2+d*.16)}
+ else if(kind==='benchrack'){const p=.064*s;for(const sx of[-1,1])for(const zz of[-d/2,-d/2+Math.min(it.d,48*IN)*s-p])g.rect(sx>0?w/2-p:-w/2,zz,p,p);g.rect(-.15*s,-d*.1,.3*s,1.2*s)}
+ else if(kind==='spinbike'){g.moveTo(0,-d/2);g.lineTo(0,d/2);g.rect(-.035*s,-d*.2-.24*s,.07*s,.48*s)}
  else if(kind==='stairs'){const n=Math.max(3,Math.round(it.h/.18));for(let k=1;k<n;k++){const yy=-d/2+k*d/n;g.moveTo(-w/2,yy);g.lineTo(w/2,yy)}g.moveTo(0,d/2);g.lineTo(0,-d/2);g.lineTo(-5,-d/2+8);g.moveTo(0,-d/2);g.lineTo(5,-d/2+8)}
  g.stroke();
  g.strokeStyle=sel?C.acc:'rgba(0,0,0,.6)';g.lineWidth=2.5;g.beginPath();g.moveTo(-w/2,d/2);g.lineTo(w/2,d/2);g.stroke();
@@ -1073,6 +1102,7 @@ function renderInsp(){
  else if(s.kind==='light'){h=`<h2>LIGHT</h2><p class="sub">${LIGHT_TYPES[o.type].name}</p>
   <label class="f"><span>Type</span><select data-k="type">${Object.entries(LIGHT_TYPES).map(([k,v])=>`<option value="${k}" ${o.type===k?'selected':''}>${v.name}</option>`).join('')}</select></label>
   <label class="f"><span>Power</span><span><input type="checkbox" data-k="on" ${o.on?'checked':''}> on</span></label>
+  ${o.type==='tablelamp'?lenF('Sits on surface at','lift',o.lift??.66,true):''}
   <label class="f"><span>Brightness</span><input type="range" min="100" max="3000" step="50" data-k="lm" value="${o.lm}"></label><p class="note" id="lmL" style="margin-top:-4px">${o.lm} lumens · about a ${o.lm<500?'40':o.lm<900?'60':o.lm<1300?'75':o.lm<1800?'100':'150'} W bulb</p>
   <h3>Colour temperature</h3><div class="sw">${KELVIN.map(([k,c])=>`<button style="background:${c};width:auto;padding:0 8px;font:11px var(--mono);color:#333" class="${o.color===c?'on':''}" data-k="color" data-v="${c}">${k}K</button>`).join('')}<input type="color" data-k="color" value="${o.color}" style="width:30px;height:30px;padding:0;border:0"></div>
   <div class="row"><button class="btn del" data-act="del">Delete light</button></div><p class="note">Up to four lights at a time cast real shadows.</p>`}
@@ -1127,6 +1157,7 @@ function applyLen(k,v){
   else if(s.kind==='opening'){const L=wallInfo(get('wall',o.wall)).L;
    if(k==='left')o.off=v+o.w/2;else if(k==='right')o.off=L-v-o.w/2;else if(k==='w'){const l=o.off-o.w/2;o.w=v;o.off=l+v/2}else o[k]=v;clampOpening(o)}
   else if(s.kind==='item'){o[k]=k==='y'?v:Math.max(.02,v)}
+  else if(s.kind==='light'){o[k]=clamp(v,0,floorH(o.floor)-.5)}
  });
 }
 function applyK(k,v){
@@ -1196,11 +1227,12 @@ function openLibrary(){
  const cats={};for(const[k,p]of Object.entries(PRESETS))(cats[p[1]]=cats[p[1]]||[]).push([k,p]);
  const dims=p=>`${fmt(p[2]*IN)} × ${fmt(p[3]*IN)}`;
  const body=`<div class="lib"><h4>Your scans & photos</h4><div class="libg"><button class="add" data-scan="1">+ 3D scan (GLB)</button><button class="add" data-photo="1">+ Item from a photo</button>${S.library.map(L=>`<button data-lib="${L.id}"><img src="${L.img}" alt=""><b>${esc(L.name)}${L.kind==='model'?' <small style="color:var(--acc)">3D</small>':''}</b><i>${fmt(L.w)} × ${fmt(L.d)}</i></button>`).join('')}</div>
-  ${Object.entries(cats).map(([c,arr])=>`<h4>${c}</h4><div class="libg">${arr.map(([k,p])=>`<button data-pre="${k}"><b><em style="background:${p[5]}"></em>${p[0]}</b><i>${dims(p)}</i></button>`).join('')}</div>`).join('')}</div>`;
+  ${Object.entries(cats).map(([c,arr])=>`<h4>${c}</h4><div class="libg">${arr.map(([k,p])=>`<button data-pre="${k}"><b><em style="background:${p[5]}"></em>${p[0]}</b><i>${dims(p)}</i></button>`).join('')}</div>`).join('')}<h4>Lighting (real light sources)</h4><div class="libg">${Object.entries(LIGHT_TYPES).map(([k,v])=>`<button data-lt="${k}"><b><em style="background:#ffb46b"></em>${v.name}</b><i>${v.lm} lm</i></button>`).join('')}</div></div>`;
  modal('Furniture',body,[],(m,close)=>{m.querySelector('.lib').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.photo){close();photoModal();return}
   if(b.dataset.scan){close();scanModal();return}
-  if(b.dataset.pre){close();const k=b.dataset.pre,p=PRESETS[k];startPlace({preset:k,name:p[0],w:p[2]*IN,d:p[3]*IN,h:k==='stairs'?floorH(S.cur):p[4]*IN,color:p[5],rot:0,y:0})}
+  if(b.dataset.pre){close();const k=b.dataset.pre,p=PRESETS[k];startPlace({preset:k,name:p[0],w:p[2]*IN,d:p[3]*IN,h:k==='stairs'?floorH(S.cur):p[4]*IN,color:p[5],rot:0,y:(p[7]||0)*IN})}
+  if(b.dataset.lt){close();ui.lightType=b.dataset.lt;setTool('light');toast(`Click to place a ${LIGHT_TYPES[b.dataset.lt].name.toLowerCase()}`)}
   if(b.dataset.lib){close();const L=S.library.find(l=>l.id===b.dataset.lib);startPlace({preset:L.kind==='model'?'model':'photo',lib:L.id,name:L.name,w:L.w,d:L.d,h:L.h,style:L.style,color:L.color,rot:0,y:0})}}});
 }
 function startPlace(spec){setTool('place');ui.place={spec};document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b.dataset.t==='furniture'));updHint();toast(`Click to place the ${spec.name.toLowerCase()}`)}
@@ -1467,7 +1499,7 @@ function sample(){
  I('tub',20.5,15.35);I('toilet',22.8,19,-H);I('vanity',19,20.1,Math.PI);I('washer',26,20.25,Math.PI);
  I('desk',22.5,25,Math.PI);I('chair',22.5,23.6);I('bookshelf',27.4,23.5,-H);I('plant',17.9,25.1);
  const Lt=(x,z,t,lm)=>{const l=newLight(f,F(x),F(z),t);if(lm)l.lm=lm;S.lights.push(l)};
- Lt(7,7,'ceiling');Lt(13.5,12.3,'lamp');Lt(20.5,6.5,'pendant');Lt(23.5,6.5,'pendant');Lt(21.5,11.4,'spot');Lt(6.5,19.5,'ceiling');Lt(2.8,24.5,'lamp',300);Lt(15,20,'spot');Lt(20.5,17.5,'ceiling');Lt(26,17.5,'spot');Lt(22.5,23.5,'ceiling');
+ Lt(7,7,'ceiling');Lt(13.5,12.3,'lamp');Lt(20.5,6.5,'pendant');Lt(23.5,6.5,'pendant');Lt(21.5,11.4,'spot');Lt(6.5,19.5,'ceiling');{const l=newLight(f,F(2.8),F(25.2),'tablelamp');l.lift=24*IN;S.lights.push(l);const l2=newLight(f,F(10.2),F(25.2),'tablelamp');l2.lift=24*IN;S.lights.push(l2)}Lt(15,20,'spot');Lt(20.5,17.5,'ceiling');Lt(26,17.5,'spot');Lt(22.5,23.5,'ceiling');
  S.set.hour=19.75;
 }
 
