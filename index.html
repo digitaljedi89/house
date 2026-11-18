@@ -893,7 +893,7 @@ function click(e,p,hit,shift){
    let r;commit(()=>{r=makeRoom(S.cur,d.a.x,d.a.z,q.x-d.a.x,q.z-d.a.z)});ui.draft=null;ui.typed='';select({kind:'room',id:r.id});toast(`${r.name} added · ${fmtA(r.w*r.d)}`)}
   buildDraft3D();collectLabels();updHint();return}
  if(t==='door'||t==='window'||t==='closet'){const d=ui.draft?.kind==='op'?ui.draft:null;if(!d){toast('Click on a wall');return}
-  const o={...d};delete o.kind;o.id=uid();commit(()=>S.openings.push(o));select({kind:'opening',id:o.id});return}
+  const o={...d};delete o.kind;o.id=uid();commit(()=>S.openings.push(o));if(!shift)setTool('select');else{ui.draft=null;buildDraft3D()}select({kind:'opening',id:o.id});return}
  if(t==='place'&&ui.place){const sp=ui.place.spec;const it={...sp,id:uid(),floor:S.cur,x:snapV(p.x),z:snapV(p.z)};commit(()=>S.items.push(it));
   if(!shift){setTool('select');select({kind:'item',id:it.id})}return}
  if(t==='light'){const L=newLight(S.cur,snapV(p.x),snapV(p.z),ui.lightType);commit(()=>S.lights.push(L));select({kind:'light',id:L.id});return}
@@ -914,6 +914,7 @@ function applyTyped(){
 function select(s){ui.sel=s;rebuild();renderInsp();updHint()}
 
 [cv3,cv2].forEach(c=>{c.addEventListener('pointerdown',onDown,{capture:true});c.addEventListener('pointermove',onMove);c.addEventListener('pointerup',onUp);c.addEventListener('pointercancel',onUp);c.addEventListener('contextmenu',e=>{e.preventDefault();if(ui.draft&&ui.draft.kind!=='op'&&ui.draft.kind!=='item'&&ui.draft.kind!=='light')finishDraft()})});
+[cv3,cv2].forEach(c=>c.addEventListener('pointerleave',()=>{if(down)return;if(ui.draft&&['op','item','light','cursor'].includes(ui.draft.kind)){ui.draft=null;buildDraft3D();collectLabels();dirty2=true}}));
 cv3.addEventListener('dblclick',()=>{if(ui.draft?.kind==='wall')finishDraft()});cv2.addEventListener('dblclick',()=>{if(ui.draft?.kind==='wall')finishDraft()});
 cv2.addEventListener('wheel',e=>{e.preventDefault();const r=cv2.getBoundingClientRect(),mx=e.clientX-r.left-r.width/2,my=e.clientY-r.top-r.height/2;const wx=mx/v2.s+v2.cx,wz=my/v2.s+v2.cz;
  v2.s=clamp(v2.s*Math.exp(-e.deltaY*.0015),6,500);v2.cx=wx-mx/v2.s;v2.cz=wz-my/v2.s;dirty2=true},{passive:false});
@@ -1000,7 +1001,7 @@ function updHint(){
  else if(ui.view==='3d'&&ui.cam==='tour')s='Room tour. Click or press <kbd>Esc</kbd> to stop';
  else if(t==='wall')s=ui.draft?.kind==='wall'?`Click to place the next corner, or type a length and press <kbd>Enter</kbd> ${ui.typed?tTxt(ui.typed):''} · <kbd>Shift</kbd> free angle · double-click or <kbd>Esc</kbd> to finish`:'Click to start a wall. Corners snap to existing walls';
  else if(t==='room')s=ui.draft?.kind==='room'?`Click the opposite corner, or type width x depth (e.g. 12x14) and press <kbd>Enter</kbd> ${ui.typed?tTxt(ui.typed):''}`:'Click a corner to start a room';
- else if(t==='door'||t==='window'||t==='closet')s=`Hover a wall and click to add a ${t}. Set exact sizes in the panel`;
+ else if(t==='door'||t==='window'||t==='closet')s=`Hover a wall and click to add a ${t}, then set exact sizes in the panel · <kbd>Shift</kbd>+click to add several`;
  else if(t==='place')s='Click to place · <kbd>Q</kbd>/<kbd>E</kbd> rotate (hold <kbd>Shift</kbd> for 90°) · <kbd>Shift</kbd>+click to place several';
  else if(t==='light')s='Click to place a light. It lights the room in 3D; try the time slider at night';
  else if(t==='measure')s=ui.measure?.live?'Click the second point':'Click two points to measure';
