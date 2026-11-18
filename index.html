@@ -322,11 +322,20 @@ function wallInfo(w){const dx=w.x2-w.x1,dz=w.z2-w.z1,L=Math.hypot(dx,dz)||1e-6;r
 function proj(w,x,z){const I=wallInfo(w);const u=(x-w.x1)*I.ux+(z-w.z1)*I.uz;const v=(x-w.x1)*I.nx+(z-w.z1)*I.nz;return{u,v,dist:Math.abs(v),side:v>=0?1:-1,I}}
 function segDist(w,x,z){const p=proj(w,x,z);const u=clamp(p.u,0,p.I.L);return Math.hypot(x-(w.x1+p.I.ux*u),z-(w.z1+p.I.uz*u))}
 
+function opsFor(w){const I=wallInfo(w),res=[];
+ for(const o of S.openings){const ow=get('wall',o.wall);if(!ow||ow.floor!==w.floor)continue;if(ow.id===w.id){res.push(o);continue}
+  const J=wallInfo(ow);if(Math.abs(I.ux*J.uz-I.uz*J.ux)>.06)continue;
+  const q=proj(w,ow.x1+J.ux*o.off,ow.z1+J.uz*o.off);if(q.dist>(w.t+ow.t)/2+.15)continue;if(q.u+o.w/2<=0||q.u-o.w/2>=I.L)continue;
+  res.push({...o,off:q.u,foreign:true})}
+ return res}
+function alignPt(p){let x=snapV(p.x),z=snapV(p.z),bx=ui.view==='2d'?10/v2.s:.25,bz=bx;
+ for(const w of S.walls){if(w.floor!==S.cur)continue;for(const[ex,ez]of[[w.x1,w.z1],[w.x2,w.z2]]){const dx=Math.abs(ex-p.x),dz=Math.abs(ez-p.z);if(dx<bx){bx=dx;x=ex}if(dz<bz){bz=dz;z=ez}}}
+ return{x,z}}
 function addWall(fid,x1,z1,x2,z2,o={}){
  const L=Math.hypot(x2-x1,z2-z1);if(L<0.05)return[];
  const ux=(x2-x1)/L,uz=(z2-z1)/L;let iv=[[0,L]];
  for(const w of S.walls){if(w.floor!==fid)continue;
-  const d1=Math.abs((w.x1-x1)*-uz+(w.z1-z1)*ux),d2=Math.abs((w.x2-x1)*-uz+(w.z2-z1)*ux);if(d1>.03||d2>.03)continue;
+  const d1=Math.abs((w.x1-x1)*-uz+(w.z1-z1)*ux),d2=Math.abs((w.x2-x1)*-uz+(w.z2-z1)*ux);if(d1>.08||d2>.08)continue;
   let a=(w.x1-x1)*ux+(w.z1-z1)*uz,b=(w.x2-x1)*ux+(w.z2-z1)*uz;if(a>b)[a,b]=[b,a];
   iv=iv.flatMap(([s,e])=>{if(b<=s+.01||a>=e-.01)return[[s,e]];const r=[];if(a>s+.05)r.push([s,a]);if(b<e-.05)r.push([b,e]);return r});
  }
@@ -455,11 +464,11 @@ function rebuild(){
   }
   // walls + openings
   for(const w of S.walls.filter(w=>w.floor===f.id)){
-   const I=wallInfo(w),H=w.h,ops=S.openings.filter(o=>o.wall===w.id);
+   const I=wallInfo(w),H=w.h,allOps=opsFor(w),ops=allOps.filter(o=>!o.foreign);
    const sel=ui.sel?.kind==='wall'&&ui.sel.id===w.id;
    const wm=sel?M(w.color,{e:'#3b78ff',ei:.35}):M(w.color,{r:.9});const cap=M(shade(w.color,-.35),{r:.9});
    const mats=[wm,wm,cut<H?cap:wm,wm,wm,wm];
-   for(const p of wallPieces(w,ops,H)){const y1=Math.min(p.y1,cut);if(y1<=p.y0+.001)continue;
+   for(const p of wallPieces(w,allOps,H)){const y1=Math.min(p.y1,cut);if(y1<=p.y0+.001)continue;
     const m=new THREE.Mesh(new THREE.BoxGeometry(p.u1-p.u0,y1-p.y0,w.t),mats);const uc=(p.u0+p.u1)/2;
     m.position.set(w.x1+I.ux*uc,e+(p.y0+y1)/2,w.z1+I.uz*uc);m.rotation.y=-I.a;m.castShadow=m.receiveShadow=true;
     if(isCur)m.userData.ref={kind:'wall',id:w.id};world.add(m)}
@@ -689,10 +698,10 @@ function draw2D(){
  for(const it of S.items.filter(i=>i.floor===S.cur))drawItem2D(g,it,C,ui.sel?.id===it.id);
  if(ui.draft?.kind==='item'){g.globalAlpha=.6;drawItem2D(g,{...ui.draft.spec,x:ui.draft.x,z:ui.draft.z},C,true);g.globalAlpha=1}
  // walls
- for(const w of walls){const I=wallInfo(w),ops=S.openings.filter(o=>o.wall===w.id),sel=ui.sel?.kind==='wall'&&ui.sel.id===w.id;
+ for(const w of walls){const I=wallInfo(w),allOps=opsFor(w),ops=allOps.filter(o=>!o.foreign),sel=ui.sel?.kind==='wall'&&ui.sel.id===w.id;
   g.save();g.translate(...P2(w.x1,w.z1));g.rotate(I.a);g.scale(v2.s,v2.s);
   g.fillStyle=sel?C.acc:C.wall;
-  for(const p of wallPieces(w,ops,w.h))if(p.y0===0&&p.y1===w.h)g.fillRect(p.u0,-w.t/2,p.u1-p.u0,w.t);
+  for(const p of wallPieces(w,allOps,w.h))if(p.y0===0&&p.y1===w.h)g.fillRect(p.u0,-w.t/2,p.u1-p.u0,w.t);
   for(const o of ops)drawOpening2D(g,o,w,C,ui.sel?.id===o.id);
   g.restore()}
  // draft opening
@@ -871,7 +880,7 @@ function doDrag(e){
 function hover(e){
  const p=worldAt(e);const t=ui.tool;
  if(t==='wall'){if(!p)return;const d=ui.draft?.kind==='wall'?ui.draft:null;if(d){d.b=snapPt(p,d.a,e.shiftKey)}else ui.draft={kind:'cursor',...snapPt(p,null)}}
- else if(t==='room'){if(!p)return;const d=ui.draft?.kind==='room'?ui.draft:null;if(d)d.b={x:snapV(p.x),z:snapV(p.z)};else ui.draft={kind:'cursor',x:snapV(p.x),z:snapV(p.z)}}
+ else if(t==='room'){if(!p)return;const d=ui.draft?.kind==='room'?ui.draft:null;const q=alignPt(p);if(d)d.b=q;else ui.draft={kind:'cursor',...q}}
  else if(t==='door'||t==='window'||t==='closet'){const tw=targetWall(e,p);if(!tw){ui.draft=null}else{const o=newOpening(t,tw.w,tw.u,tw.side);o.off=snapV(tw.u-o.w/2)+o.w/2;clampOpening(o);ui.draft={kind:'op',...o}}}
  else if(t==='place'&&ui.place){if(!p)return;ui.draft={kind:'item',x:snapV(p.x),z:snapV(p.z),spec:ui.place.spec}}
  else if(t==='light'){if(!p)return;ui.draft={kind:'light',x:snapV(p.x),z:snapV(p.z),type:ui.lightType}}
@@ -888,7 +897,7 @@ function click(e,p,hit,shift){
   else{if(Math.hypot(q.x-d.a.x,q.z-d.a.z)<.05){finishDraft();return}commit(()=>addWall(S.cur,d.a.x,d.a.z,q.x,q.z));
    if(near(q.x,q.z,d.origin.x,d.origin.z,.03)){finishDraft();return}ui.draft={kind:'wall',a:q,b:q,origin:d.origin};ui.typed=''}
   buildDraft3D();collectLabels();updHint();return}
- if(t==='room'){const q={x:snapV(p.x),z:snapV(p.z)};const d=ui.draft?.kind==='room'?ui.draft:null;
+ if(t==='room'){const q=alignPt(p);const d=ui.draft?.kind==='room'?ui.draft:null;
   if(!d){ui.draft={kind:'room',a:q,b:q};ui.typed=''}else{if(Math.abs(q.x-d.a.x)<.3||Math.abs(q.z-d.a.z)<.3){toast('Room is too small');return}
    let r;commit(()=>{r=makeRoom(S.cur,d.a.x,d.a.z,q.x-d.a.x,q.z-d.a.z)});ui.draft=null;ui.typed='';select({kind:'room',id:r.id});toast(`${r.name} added · ${fmtA(r.w*r.d)}`)}
   buildDraft3D();collectLabels();updHint();return}
@@ -989,7 +998,7 @@ function camStep(dt){
 }
 function blocked(x,z){const R=.22;
  for(const w of S.walls){if(w.floor!==S.cur)continue;if(segDist(w,x,z)>w.t/2+R)continue;const q=proj(w,x,z);
-  const thru=S.openings.some(o=>o.wall===w.id&&o.type!=='window'&&q.u>o.off-o.w/2+.08&&q.u<o.off+o.w/2-.08);if(!thru)return true}
+  const thru=opsFor(w).some(o=>o.type!=='window'&&q.u>o.off-o.w/2+.08&&q.u<o.off+o.w/2-.08);if(!thru)return true}
  return false}
 
 /* ================= UI rendering ================= */
